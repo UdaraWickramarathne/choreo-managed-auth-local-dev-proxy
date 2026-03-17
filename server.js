@@ -20,11 +20,10 @@
 
 const express = require('express')
 const { createProxyMiddleware } = require('http-proxy-middleware')
-const fs = require('fs')
 const https = require('https')
 const commandLineArgs = require('command-line-args')
-const path = require('path')
 const winston = require('winston')
+const selfsigned = require('selfsigned')
 
 
 const cliArgDefinitions = [
@@ -111,12 +110,25 @@ httpsApp.use('/auth', choreoProxy)
 httpsApp.use('/choreo-apis', choreoProxy)
 httpsApp.use('/', localProxy)
 
-const keyFilePath = path.join(__dirname, 'sslcert', 'localhost.key')
-const certFilePath = path.join(__dirname, 'sslcert', 'localhost.crt')
+async function startHttpsServer() {
+    try {
+        const { private: key, cert } = await selfsigned.generate(
+            [{ name: 'commonName', value: 'localhost' }],
+            { days: 365 }
+        )
 
-var privateKey = fs.readFileSync(keyFilePath, 'utf8')
-var certificate = fs.readFileSync(certFilePath, 'utf8')
-var credentials = { key: privateKey, cert: certificate }
+        logger.info('Generated self-signed certificate for localhost')
 
-var httpsServer = https.createServer(credentials, httpsApp)
-httpsServer.listen(configs.proxyPort, () => logger.info(`Access your web application on ${configs.getProxyUrl()}`))
+        const httpsServer = https.createServer({ key, cert }, httpsApp)
+
+        httpsServer.listen(configs.proxyPort, () =>
+            logger.info(`Access your web application on ${configs.getProxyUrl()}`)
+        )
+    } catch (error) {
+        logger.error(`Failed to initialize HTTPS server: ${error.message}`)
+        process.exit(1)
+    }
+}
+
+startHttpsServer()
+
