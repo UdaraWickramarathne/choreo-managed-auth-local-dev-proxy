@@ -8,7 +8,7 @@ An HTTPS forward proxy for local development with Choreo's Managed Authenticatio
 
 ```bash
 npm install              # Install dependencies
-npm start                # Run the proxy (requires CLI args, see below)
+npm start -- -p <APP_PORT> -u <WEB_APP_URL> # Run the proxy via the package script
 npx @choreo/proxy -p <APP_PORT> -u <WEB_APP_URL>  # Run via npx
 ```
 
@@ -34,4 +34,4 @@ The server generates a self-signed TLS certificate at startup using the `selfsig
 
 ## Release Process
 
-Releases are triggered manually via the `Release` GitHub Actions workflow (`workflow_dispatch`). It bumps the version (patch/minor/major), pushes a git tag, creates a GitHub release, and publishes to NPM.
+Releases are triggered manually via the `Release` GitHub Actions workflow (`workflow_dispatch`). It bumps the version (patch/major), pushes a git tag, creates a GitHub release, and publishes to NPM.
